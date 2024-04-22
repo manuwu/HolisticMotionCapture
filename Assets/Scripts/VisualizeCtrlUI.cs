@@ -33,6 +33,7 @@ public class VisualizeCtrlUI : MonoBehaviour
     readonly string backOffName = "None";
     readonly string backImagePlayerPrefsKey = "SelectedBackgroundImageFileName";
 
+    [SerializeField] private Animator _animator;
 
     void Awake()
     {
@@ -59,33 +60,33 @@ public class VisualizeCtrlUI : MonoBehaviour
         ChangeIsUpperBodyOnly();
         ChangeLookCamera();
 
-        var lastOpenVrm = PlayerPrefs.GetString(avatarPlayerPrefsKey);
-        var initVrm = string.IsNullOrEmpty(lastOpenVrm) ? defaultVrmPath : lastOpenVrm;
-        ChangeVrmFromFileName(initVrm);
-        for (int i = 0; i < vrmSelectDropdown.options.Count; i++)
-        {
-            var option = vrmSelectDropdown.options[i];
-            if (option.text == initVrm)
-            {
-                vrmSelectDropdown.value = i;
-                vrmSelectDropdown.RefreshShownValue();
-                break;
-            }
-        }
-
-        var lastOpenbackImage = PlayerPrefs.GetString(backImagePlayerPrefsKey);
-        var initBackImage = string.IsNullOrEmpty(lastOpenbackImage) ? defaultTextureName : lastOpenbackImage;
-        ChangeBackTextureFromFileName(initBackImage);
-        for (int i = 0; i < backTextureSelect.options.Count; i++)
-        {
-            var option = backTextureSelect.options[i];
-            if (option.text == initBackImage)
-            {
-                backTextureSelect.value = i;
-                backTextureSelect.RefreshShownValue();
-                break;
-            }
-        }
+        // var lastOpenVrm = PlayerPrefs.GetString(avatarPlayerPrefsKey);
+        // var initVrm = string.IsNullOrEmpty(lastOpenVrm) ? defaultVrmPath : lastOpenVrm;
+        // ChangeVrmFromFileName(initVrm);
+        // for (int i = 0; i < vrmSelectDropdown.options.Count; i++)
+        // {
+        //     var option = vrmSelectDropdown.options[i];
+        //     if (option.text == initVrm)
+        //     {
+        //         vrmSelectDropdown.value = i;
+        //         vrmSelectDropdown.RefreshShownValue();
+        //         break;
+        //     }
+        // }
+        visuallizer.SetAnimator(_animator);
+        // var lastOpenbackImage = PlayerPrefs.GetString(backImagePlayerPrefsKey);
+        // var initBackImage = string.IsNullOrEmpty(lastOpenbackImage) ? defaultTextureName : lastOpenbackImage;
+        // ChangeBackTextureFromFileName(initBackImage);
+        // for (int i = 0; i < backTextureSelect.options.Count; i++)
+        // {
+        //     var option = backTextureSelect.options[i];
+        //     if (option.text == initBackImage)
+        //     {
+        //         backTextureSelect.value = i;
+        //         backTextureSelect.RefreshShownValue();
+        //         break;
+        //     }
+        // }
     }
 
     void OnDestroy()
@@ -142,7 +143,7 @@ public class VisualizeCtrlUI : MonoBehaviour
         hmcTypeSelect.ClearOptions();
         hmcTypeSelect.AddOptions(selectOptions);
 
-        var selectedType = (HolisticMocapType)Enum.ToObject(typeof(HolisticMocapType), hmcTypeSelect.value);
+        var selectedType = HolisticMocapType.pose_only;// (HolisticMocapType)Enum.ToObject(typeof(HolisticMocapType), hmcTypeSelect.value);
         visuallizer.SetHolisticMocapType(selectedType);
         hmcTypeSelect.onValueChanged.AddListener(selectValue =>
         {
@@ -153,7 +154,7 @@ public class VisualizeCtrlUI : MonoBehaviour
 
     public void ChangeIsUpperBodyOnly()
     {
-        visuallizer.SetIsUpperBodyOnly(isUpperBodyOnlyToggle.isOn);
+        visuallizer.SetIsUpperBodyOnly(false);
     }
 
     public void ChangeLookCamera()
@@ -223,11 +224,12 @@ public class VisualizeCtrlUI : MonoBehaviour
 
     private void ChangeBackTextureFromFileName(string filename)
     {
-        if (filename == defaultTexture.name)
-        {
-            backGroundTexture.texture = defaultTexture;
-            return;
-        }
+        // if (filename == defaultTexture.name)
+        // {
+        //     backGroundTexture.texture = defaultTexture;
+        //     return;
+        // }
+        return;
         if (filename == backOffName)
         {
             backGroundTexture.texture = Texture2D.blackTexture;

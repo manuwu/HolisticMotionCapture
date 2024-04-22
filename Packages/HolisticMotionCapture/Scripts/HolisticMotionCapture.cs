@@ -53,9 +53,9 @@ namespace HolisticMotionCapture
 
             holisticPipeline.ProcessImage(inputTexture, (HolisticInferenceType)mocapType, blazePoseModel, poseDetectionThreshold, poseDetectionIouThreshold);
             PoseRender(mocapType, poseScoreThreshold, isUpperBodyOnly, lerpPercentage);
-            HandRender(mocapType, true, handScoreThreshold, lerpPercentage);
-            HandRender(mocapType, false, handScoreThreshold, lerpPercentage);
-            FaceRender(mocapType, faceScoreThreshold, lookTargetWorldPosition);
+            // HandRender(mocapType, true, handScoreThreshold, lerpPercentage);
+            // HandRender(mocapType, false, handScoreThreshold, lerpPercentage);
+            // FaceRender(mocapType, faceScoreThreshold, lookTargetWorldPosition);
         }
 
         public void ResetAvatar(float lerpPercentage = 0.3f)

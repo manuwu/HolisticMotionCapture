@@ -3,12 +3,13 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Rendering;
 using HolisticMotionCapture;
+using RenderHeads.Media.AVProVideo;
 
 public class Visuallizer : MonoBehaviour
 {
-    [SerializeField] Camera predictResultCamera;
-    [SerializeField] WebCamCtrlUI webCamInput;
-    [SerializeField] RawImage image;
+    // [SerializeField] Camera predictResultCamera;
+    // [SerializeField] WebCamCtrlUI webCamInput;
+    // [SerializeField] RawImage image;
     [SerializeField, Range(0, 1)] float lerpPercentage = 0.3f;
     [SerializeField] Shader poseShader;
     [SerializeField, Range(0, 1)] float humanPoseThreshold = 0.5f;
@@ -19,7 +20,7 @@ public class Visuallizer : MonoBehaviour
     [SerializeField, Range(0, 1)] float handScoreThreshold = 0.5f;
 
 
-    HolisticMocapType holisticMocapType = HolisticMocapType.full;
+    HolisticMocapType holisticMocapType = HolisticMocapType.pose_only;
     bool isUpperBodyOnly;
     Transform lookTarget;
     Animator avatarAnimator;
@@ -29,7 +30,7 @@ public class Visuallizer : MonoBehaviour
     MaterialPropertyBlock faceMaterialPropertyBlock;
     Material leftHandMaterial;
     Material rightHandMaterial;
-    CommandBuffer commandBuffer;
+    // CommandBuffer commandBuffer;
 
     // Lines count of body's topology.
     const int BODY_LINE_NUM = 35;
@@ -45,6 +46,8 @@ public class Visuallizer : MonoBehaviour
         new Vector4(24, 26), new Vector4(26, 28), new Vector4(28, 30), new Vector4(30, 32), new Vector4(32, 28)
     };
 
+    [SerializeField] private DisplayUGUI disGui;
+    [SerializeField] private RawImage test;
     void Start()
     {
         poseMaterial = new Material(poseShader);
@@ -52,120 +55,164 @@ public class Visuallizer : MonoBehaviour
         faceMaterialPropertyBlock = new MaterialPropertyBlock();
         leftHandMaterial = new Material(handShader);
         rightHandMaterial = new Material(handShader);
-        commandBuffer = new CommandBuffer();
-        predictResultCamera.AddCommandBuffer(CameraEvent.AfterEverything, commandBuffer);
+        // commandBuffer = new CommandBuffer();
+        // predictResultCamera.AddCommandBuffer(CameraEvent.AfterEverything, commandBuffer);
     }
 
+    private Texture2D inputTex;
     void LateUpdate()
     {
-        var inputImage = webCamInput.webCamImage;
-        if (inputImage == null) return;
-        image.texture = inputImage;
-        if (motionCapture == null) return;
-        motionCapture.AvatarPoseRender(inputImage, lookTarget, humanPoseThreshold, handScoreThreshold, faceScoreThreshold, isUpperBodyOnly, lerpPercentage, holisticMocapType);
-
-        SetCommandBuffer();
-    }
-
-    void SetCommandBuffer()
-    {
-        commandBuffer.Clear();
-        if (holisticMocapType != HolisticMocapType.face_only) PoseRender();
-        if (holisticMocapType == HolisticMocapType.pose_only) return;
-
-        if (holisticMocapType == HolisticMocapType.full ||
-            holisticMocapType == HolisticMocapType.pose_and_face ||
-            holisticMocapType == HolisticMocapType.face_only)
-        {
-            FaceRender();
-        }
-
-        if (holisticMocapType == HolisticMocapType.full ||
-            holisticMocapType == HolisticMocapType.pose_and_hand)
-        {
-            HandRender(false);
-            HandRender(true);
-        }
-    }
-
-    void PoseRender()
-    {
-        float score = motionCapture.holisticPipeline.GetPoseLandmark(motionCapture.holisticPipeline.poseVertexCount).x;
-        if (score < humanPoseThreshold)
-        {
+        // var inputImage = webCamInput.webCamImage;
+        // if (inputImage == null) return;
+        if(inputTex!=null)
+            Destroy(inputTex);
+        inputTex =VerticalFlipTexture(duplicateTexture( disGui.mainTexture as Texture2D));
+        
+        test.texture = disGui.mainTexture;
+        // image.texture = inputImage;
+        
+        if (motionCapture == null) 
             return;
-        }
-
-        var w = image.rectTransform.rect.width;
-        var h = image.rectTransform.rect.height;
-
-        // Set inferenced pose landmark results.
-        poseMaterial.SetBuffer("_vertices", motionCapture.holisticPipeline.poseLandmarkBuffer);
-        // Set pose landmark counts.
-        poseMaterial.SetInt("_keypointCount", motionCapture.holisticPipeline.poseVertexCount);
-        poseMaterial.SetFloat("_poseThreshold", humanPoseThreshold);
-        poseMaterial.SetVector("_uiScale", new Vector2(w, h));
-        poseMaterial.SetVectorArray("_linePair", linePair);
-
-        // Draw 35 body topology lines.
-        commandBuffer.DrawProcedural(Matrix4x4.identity, poseMaterial, 0, MeshTopology.Triangles, 6, BODY_LINE_NUM);
-
-        // Draw 33 landmark points.
-        commandBuffer.DrawProcedural(Matrix4x4.identity, poseMaterial, 1, MeshTopology.Triangles, 6, motionCapture.holisticPipeline.poseVertexCount);
+        motionCapture.AvatarPoseRender(inputTex, lookTarget, humanPoseThreshold, handScoreThreshold, faceScoreThreshold, isUpperBodyOnly, lerpPercentage, holisticMocapType);
+     
+        // SetCommandBuffer();
     }
-
-    void FaceRender()
+    
+    public static Texture2D VerticalFlipTexture(Texture2D texture)
     {
-        if (motionCapture.holisticPipeline.faceDetectionScore < faceScoreThreshold)
+        //得到图片的宽高
+        int width = texture.width;
+        int height = texture.height;
+ 
+        Texture2D flipTexture = new Texture2D(width, height);
+        for (int i = 0; i < height; i++)
         {
-            return;
+            flipTexture.SetPixels(0, i, width, 1, texture.GetPixels(0, height - i - 1, width, 1));
         }
-
-        var w = image.rectTransform.rect.width;
-        var h = image.rectTransform.rect.height;
-        faceMeshMaterial.SetVector("_uiScale", new Vector2(w, h));
-
-        // FaceMesh
-        // Set inferenced face landmark results.
-        faceMaterialPropertyBlock.SetBuffer("_vertices", motionCapture.holisticPipeline.faceVertexBuffer);
-        commandBuffer.DrawMesh(faceLineTemplateMesh, Matrix4x4.zero, faceMeshMaterial, 0, 0, faceMaterialPropertyBlock);
-
-        // Left eye
-        // Set inferenced eye landmark results.
-        faceMaterialPropertyBlock.SetBuffer("_vertices", motionCapture.holisticPipeline.leftEyeVertexBuffer);
-        faceMaterialPropertyBlock.SetVector("_eyeColor", Color.yellow);
-        commandBuffer.DrawProcedural(Matrix4x4.identity, faceMeshMaterial, 1, MeshTopology.Lines, 64, 1, faceMaterialPropertyBlock);
-
-        // Right eye
-        // Set inferenced eye landmark results.
-        faceMaterialPropertyBlock.SetBuffer("_vertices", motionCapture.holisticPipeline.rightEyeVertexBuffer);
-        faceMaterialPropertyBlock.SetVector("_eyeColor", Color.cyan);
-        commandBuffer.DrawProcedural(Matrix4x4.identity, faceMeshMaterial, 1, MeshTopology.Lines, 64, 1, faceMaterialPropertyBlock);
+        flipTexture.Apply();
+        Destroy(texture);
+        return flipTexture;
     }
-
-    void HandRender(bool isRight)
+    
+    private Texture2D duplicateTexture(Texture2D source)
     {
-        float score = isRight ? motionCapture.holisticPipeline.rightHandDetectionScore : motionCapture.holisticPipeline.leftHandDetectionScore;
-        if (score < handScoreThreshold)
-        {
-            return;
-        }
+        RenderTexture renderTex = RenderTexture.GetTemporary(
+            source.width,
+            source.height,
+            0,
+            RenderTextureFormat.Default,
+            RenderTextureReadWrite.Linear);
 
-        var w = image.rectTransform.rect.width;
-        var h = image.rectTransform.rect.height;
-        var handMaterial = isRight ? rightHandMaterial : leftHandMaterial;
-        handMaterial.SetVector("_uiScale", new Vector2(w, h));
-        handMaterial.SetVector("_pointColor", isRight ? Color.cyan : Color.yellow);
-        handMaterial.SetFloat("_handScoreThreshold", handScoreThreshold);
-        // Set inferenced hand landmark results.
-        handMaterial.SetBuffer("_vertices", isRight ? motionCapture.holisticPipeline.rightHandVertexBuffer : motionCapture.holisticPipeline.leftHandVertexBuffer);
-
-        // Draw 21 key point circles.
-        commandBuffer.DrawProcedural(Matrix4x4.identity, handMaterial, 0, MeshTopology.Triangles, 96, motionCapture.holisticPipeline.handVertexCount);
-
-        // Draw skeleton lines.
-        commandBuffer.DrawProcedural(Matrix4x4.identity, handMaterial, 1, MeshTopology.Lines, 2, 4 * 5 + 1);
+        Graphics.Blit(source, renderTex);
+        RenderTexture previous = RenderTexture.active;
+        RenderTexture.active = renderTex;
+        Texture2D readableText = new Texture2D(source.width, source.height);
+        readableText.ReadPixels(new Rect(0, 0, renderTex.width, renderTex.height), 0, 0);
+        readableText.Apply();
+        RenderTexture.active = previous;
+        RenderTexture.ReleaseTemporary(renderTex);
+        return readableText;
     }
+
+    // void SetCommandBuffer()
+    // {
+    //     // commandBuffer.Clear();
+    //     if (holisticMocapType != HolisticMocapType.face_only) PoseRender();
+    //     if (holisticMocapType == HolisticMocapType.pose_only) return;
+    //
+    //     if (holisticMocapType == HolisticMocapType.full ||
+    //         holisticMocapType == HolisticMocapType.pose_and_face ||
+    //         holisticMocapType == HolisticMocapType.face_only)
+    //     {
+    //         FaceRender();
+    //     }
+    //
+    //     if (holisticMocapType == HolisticMocapType.full ||
+    //         holisticMocapType == HolisticMocapType.pose_and_hand)
+    //     {
+    //         HandRender(false);
+    //         HandRender(true);
+    //     }
+    // }
+
+    // void PoseRender()
+    // {
+    //     float score = motionCapture.holisticPipeline.GetPoseLandmark(motionCapture.holisticPipeline.poseVertexCount).x;
+    //     if (score < humanPoseThreshold)
+    //     {
+    //         return;
+    //     }
+    //
+    //     var w = image.rectTransform.rect.width;
+    //     var h = image.rectTransform.rect.height;
+    //
+    //     // Set inferenced pose landmark results.
+    //     poseMaterial.SetBuffer("_vertices", motionCapture.holisticPipeline.poseLandmarkBuffer);
+    //     // Set pose landmark counts.
+    //     poseMaterial.SetInt("_keypointCount", motionCapture.holisticPipeline.poseVertexCount);
+    //     poseMaterial.SetFloat("_poseThreshold", humanPoseThreshold);
+    //     poseMaterial.SetVector("_uiScale", new Vector2(w, h));
+    //     poseMaterial.SetVectorArray("_linePair", linePair);
+    //
+    //     // // Draw 35 body topology lines.
+    //     // commandBuffer.DrawProcedural(Matrix4x4.identity, poseMaterial, 0, MeshTopology.Triangles, 6, BODY_LINE_NUM);
+    //     //
+    //     // // Draw 33 landmark points.
+    //     // commandBuffer.DrawProcedural(Matrix4x4.identity, poseMaterial, 1, MeshTopology.Triangles, 6, motionCapture.holisticPipeline.poseVertexCount);
+    // }
+
+    // void FaceRender()
+    // {
+    //     if (motionCapture.holisticPipeline.faceDetectionScore < faceScoreThreshold)
+    //     {
+    //         return;
+    //     }
+    //
+    //     var w = image.rectTransform.rect.width;
+    //     var h = image.rectTransform.rect.height;
+    //     faceMeshMaterial.SetVector("_uiScale", new Vector2(w, h));
+    //
+    //     // FaceMesh
+    //     // Set inferenced face landmark results.
+    //     faceMaterialPropertyBlock.SetBuffer("_vertices", motionCapture.holisticPipeline.faceVertexBuffer);
+    //     commandBuffer.DrawMesh(faceLineTemplateMesh, Matrix4x4.zero, faceMeshMaterial, 0, 0, faceMaterialPropertyBlock);
+    //
+    //     // Left eye
+    //     // Set inferenced eye landmark results.
+    //     faceMaterialPropertyBlock.SetBuffer("_vertices", motionCapture.holisticPipeline.leftEyeVertexBuffer);
+    //     faceMaterialPropertyBlock.SetVector("_eyeColor", Color.yellow);
+    //     commandBuffer.DrawProcedural(Matrix4x4.identity, faceMeshMaterial, 1, MeshTopology.Lines, 64, 1, faceMaterialPropertyBlock);
+    //
+    //     // Right eye
+    //     // Set inferenced eye landmark results.
+    //     faceMaterialPropertyBlock.SetBuffer("_vertices", motionCapture.holisticPipeline.rightEyeVertexBuffer);
+    //     faceMaterialPropertyBlock.SetVector("_eyeColor", Color.cyan);
+    //     commandBuffer.DrawProcedural(Matrix4x4.identity, faceMeshMaterial, 1, MeshTopology.Lines, 64, 1, faceMaterialPropertyBlock);
+    // }
+
+    // void HandRender(bool isRight)
+    // {
+    //     float score = isRight ? motionCapture.holisticPipeline.rightHandDetectionScore : motionCapture.holisticPipeline.leftHandDetectionScore;
+    //     if (score < handScoreThreshold)
+    //     {
+    //         return;
+    //     }
+    //
+    //     var w = image.rectTransform.rect.width;
+    //     var h = image.rectTransform.rect.height;
+    //     var handMaterial = isRight ? rightHandMaterial : leftHandMaterial;
+    //     handMaterial.SetVector("_uiScale", new Vector2(w, h));
+    //     handMaterial.SetVector("_pointColor", isRight ? Color.cyan : Color.yellow);
+    //     handMaterial.SetFloat("_handScoreThreshold", handScoreThreshold);
+    //     // Set inferenced hand landmark results.
+    //     handMaterial.SetBuffer("_vertices", isRight ? motionCapture.holisticPipeline.rightHandVertexBuffer : motionCapture.holisticPipeline.leftHandVertexBuffer);
+    //
+    //     // Draw 21 key point circles.
+    //     commandBuffer.DrawProcedural(Matrix4x4.identity, handMaterial, 0, MeshTopology.Triangles, 96, motionCapture.holisticPipeline.handVertexCount);
+    //
+    //     // Draw skeleton lines.
+    //     commandBuffer.DrawProcedural(Matrix4x4.identity, handMaterial, 1, MeshTopology.Lines, 2, 4 * 5 + 1);
+    // }
 
     void OnDestroy()
     {
@@ -174,7 +221,7 @@ public class Visuallizer : MonoBehaviour
         {
             motionCapture.Dispose();
         }
-        commandBuffer.Release();
+        // commandBuffer.Release();
     }
 
     public void SetAnimator(Animator avatar)
