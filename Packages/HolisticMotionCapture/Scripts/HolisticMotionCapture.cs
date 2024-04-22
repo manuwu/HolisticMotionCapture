@@ -16,11 +16,15 @@ namespace HolisticMotionCapture
         Animator avatar;
         const float maxFps = 30.0f;
         float lastPoseUpdateTime;
+        public Vector4[] PoseWorldLandmark=new Vector4[33];
+        public Vector4[] faceLandmarks, leftEyeLandmarks, rightEyeLandmarks;
+        public Vector4[] leftHandLandmarks=new Vector4[21];
+        public Vector4[]rightHandLandmarks=new Vector4[21];
 
         public HolisticMotionCapturePipeline(Animator avatarAnimator, BlazePoseModel blazePoseModel = BlazePoseModel.full)
         {
             avatar = avatarAnimator;
-            holisticPipeline = new HolisticPipeline(blazePoseModel);
+            // holisticPipeline = new HolisticPipeline(blazePoseModel);
             HandInit();
             PoseInit();
             FaceInit();
@@ -28,7 +32,7 @@ namespace HolisticMotionCapture
 
         public void Dispose()
         {
-            holisticPipeline.Dispose();
+            // holisticPipeline.Dispose();
         }
 
         public void AvatarPoseRender(
@@ -64,6 +68,33 @@ namespace HolisticMotionCapture
             ResetHand(true, lerpPercentage);
             ResetHand(false, lerpPercentage);
             ResetFace();
+        }
+        
+        public void AvatarPoseRender(
+            Transform lookTargetWorldPosition = null,
+            float poseScoreThreshold = 0.5f,
+            float handScoreThreshold = 0.5f,
+            float faceScoreThreshold = 0.5f,
+            bool isUpperBodyOnly = false,
+            float lerpPercentage = 0.3f,
+            HolisticMocapType mocapType = HolisticMocapType.full,
+            BlazePoseModel blazePoseModel = BlazePoseModel.full,
+            float poseDetectionThreshold = 0.75f,
+            float poseDetectionIouThreshold = 0.3f)
+        {
+            float nowTime = Time.time;
+            if (nowTime - lastPoseUpdateTime < 1.0f / maxFps)
+            {
+                return;
+            }
+            lastPoseUpdateTime = nowTime;
+
+            // holisticPipeline.ProcessImage(inputTexture, (HolisticInferenceType)mocapType, blazePoseModel, poseDetectionThreshold, poseDetectionIouThreshold);
+            PoseRender(mocapType, poseScoreThreshold, isUpperBodyOnly, lerpPercentage);
+            HandRender(mocapType, true, handScoreThreshold, lerpPercentage);
+            HandRender(mocapType, false, handScoreThreshold, lerpPercentage);
+            // FaceRender(mocapType, faceScoreThreshold, lookTargetWorldPosition);
+            //todo
         }
     }
 }

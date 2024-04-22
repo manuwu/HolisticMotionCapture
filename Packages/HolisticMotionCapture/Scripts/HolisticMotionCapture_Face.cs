@@ -28,7 +28,7 @@ namespace HolisticMotionCapture
         LowPassFilter mouthU_Lpf;
         LowPassFilter mouthE_Lpf;
         LowPassFilter mouthO_Lpf;
-
+        public const int VertexCount = 468;
         void FaceInit()
         {
             proxy = avatar.GetComponent<VRMBlendShapeProxy>();
@@ -36,7 +36,7 @@ namespace HolisticMotionCapture
 
             face_lpfs = new List<LowPassFilter>();
             lpfedFaceBuffers = new List<Tuple<int, Vector4>>();
-            for (int i = 0; i < holisticPipeline.faceVertexCount; i++)
+            for (int i = 0; i < VertexCount; i++)
             {
                 face_lpfs.Add(new LowPassFilter(2, 1.5f));
                 lpfedFaceBuffers.Add(new Tuple<int, Vector4>(0, Vector4.zero));
@@ -44,7 +44,7 @@ namespace HolisticMotionCapture
 
             leftEye_lpfs = new List<LowPassFilter>();
             lpfedLeftEyeBuffers = new List<Tuple<int, Vector4>>();
-            for (int i = 0; i < holisticPipeline.eyeVertexCount; i++)
+            for (int i = 0; i < VertexCount; i++)
             {
                 leftEye_lpfs.Add(new LowPassFilter(2, 1.5f));
                 lpfedLeftEyeBuffers.Add(new Tuple<int, Vector4>(0, Vector4.zero));
@@ -52,7 +52,7 @@ namespace HolisticMotionCapture
 
             rightEye_lpfs = new List<LowPassFilter>();
             lpfedRightEyeBuffers = new List<Tuple<int, Vector4>>();
-            for (int i = 0; i < holisticPipeline.eyeVertexCount; i++)
+            for (int i = 0; i < VertexCount; i++)
             {
                 rightEye_lpfs.Add(new LowPassFilter(2, 1.5f));
                 lpfedRightEyeBuffers.Add(new Tuple<int, Vector4>(0, Vector4.zero));
@@ -107,10 +107,10 @@ namespace HolisticMotionCapture
                 return;
             }
 
-            if (holisticPipeline.faceDetectionScore < faceScoreThreshold)
-            {
-                return;
-            }
+            // if (holisticPipeline.faceDetectionScore < faceScoreThreshold)
+            // {
+            //     return;
+            // }
 
             BlinkRender();
             if (lookTargetWorldPosition != null)

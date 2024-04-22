@@ -13,12 +13,13 @@ namespace HolisticMotionCapture
         List<Tuple<int, Vector4>> lpfedPoseBuffers;
         int poseCounter;
         #endregion
-
+        // Defined by full body neural network model.
+        const int BODY_VERTEX_COUNT = 33;
         void PoseInit()
         {
             pose_lpfs = new List<LowPassFilter>();
             lpfedPoseBuffers = new List<Tuple<int, Vector4>>();
-            for (int i = 0; i < holisticPipeline.poseVertexCount; i++)
+            for (int i = 0; i < BODY_VERTEX_COUNT; i++)
             {
                 pose_lpfs.Add(new LowPassFilter(2, 1.5f));
                 lpfedPoseBuffers.Add(new Tuple<int, Vector4>(0, Vector4.zero));
@@ -130,19 +131,19 @@ namespace HolisticMotionCapture
 
             if (mocapType == HolisticMocapType.face_only) return;
 
-            // Reset pose if huamn is not visible.
-            if (holisticPipeline.GetPoseWorldLandmark(holisticPipeline.poseVertexCount).x < scoreThreshold)
-            {
-                ResetPose(lerpPercentage);
-                return;
-            }
+            // // Reset pose if huamn is not visible.
+            // if (holisticPipeline.GetPoseWorldLandmark(holisticPipeline.poseVertexCount).x < scoreThreshold)
+            // {
+            //     ResetPose(lerpPercentage);
+            //     return;
+            // }
 
-            // Reset pose and update pose in below if mode was changed.
-            if (this.isUpperBodyOnly != isUpperBodyOnly)
-            {
-                ResetPose(lerpPercentage);
-                this.isUpperBodyOnly = isUpperBodyOnly;
-            }
+            // // Reset pose and update pose in below if mode was changed.
+            // if (this.isUpperBodyOnly != isUpperBodyOnly)
+            // {
+            //     ResetPose(lerpPercentage);
+            //     this.isUpperBodyOnly = isUpperBodyOnly;
+            // }
 
             // Caluculate positions of hip, neck and spine.
             var rightHipIndex = BoneToHolisticIndex.PoseTable[HumanBodyBones.RightUpperLeg];
@@ -156,7 +157,7 @@ namespace HolisticMotionCapture
             // Caluculate avatar forward direction and hip rotation.
             var forward = TriangleNormal(spinePosition, RotatePoseLandmark(leftHipIndex), RotatePoseLandmark(rightHipIndex));
             var hipScore = (RotatePoseLandmark(leftHipIndex).w + RotatePoseLandmark(rightHipIndex).w) * 0.5f;
-            if (hipScore > scoreThreshold && !isUpperBodyOnly)
+            if (hipScore > scoreThreshold ) //&& !isUpperBodyOnly)
             {
                 var hipRotation = Quaternion.LookRotation(forward, (spinePosition - hipPosition).normalized) * poseJoints[HumanBodyBones.Hips].inverseRotation * poseJoints[HumanBodyBones.Hips].initRotation;
                 var hipTransform = avatar.GetBoneTransform(HumanBodyBones.Hips);
@@ -180,7 +181,8 @@ namespace HolisticMotionCapture
         };
             List<HumanBodyBones> rotatedBones = new List<HumanBodyBones>();
             rotatedBones.AddRange(upperBodyBones);
-            if (!isUpperBodyOnly) rotatedBones.AddRange(lowerBodyBones);
+            // if (!isUpperBodyOnly) 
+            rotatedBones.AddRange(lowerBodyBones);
 
             // Rotate head with pose landmark.
             var leftEyeLandmark = RotatePoseLandmark(2);
@@ -245,7 +247,7 @@ namespace HolisticMotionCapture
 
         Vector4 RotatePoseLandmark(int index)
         {
-            var landmark = holisticPipeline.GetPoseWorldLandmark(index);
+            var landmark = PoseWorldLandmark[index];
 
             // Low pass Filter
             var buffer = lpfedPoseBuffers[index];
@@ -261,7 +263,8 @@ namespace HolisticMotionCapture
                 lpfedPoseBuffers[index] = new Tuple<int, Vector4>(poseCounter, landmark);
             }
 
-            return new Vector4(-landmark.x, landmark.y, -landmark.z, landmark.w);
+            // return new Vector4(-landmark.x, landmark.y, -landmark.z, landmark.w);
+            return new Vector4(-landmark.x, -landmark.y, -landmark.z, landmark.w);
         }
     }
 }
