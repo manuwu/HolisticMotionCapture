@@ -108,7 +108,7 @@ namespace HolisticMotionCapture
             var handForward = Vector3.Cross(handUp, handDirection);
             if (!isLeft) handForward *= -1;
 
-            if (handForward.Equals(Vector3.zero))
+            if (!handForward.Equals(Vector3.zero))
             {
                 var wristRotation = Quaternion.LookRotation(handForward, handUp) * handJoints[wrist].inverseRotation *
                                     handJoints[wrist].initRotation;

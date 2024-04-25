@@ -129,7 +129,8 @@ namespace HolisticMotionCapture
 
         Vector4 FaceLandmark(int index)
         {
-            var landmark = holisticPipeline.GetFaceLandmark(index);
+            // var landmark = holisticPipeline.GetFaceLandmark(index);
+            var landmark = faceLandmarks[index];
 
             // Low pass Filter
             var buffer = lpfedFaceBuffers[index];
@@ -150,7 +151,7 @@ namespace HolisticMotionCapture
 
         Vector4 EyeLandmark(int index, bool isLeft)
         {
-            var landmark = isLeft ? holisticPipeline.GetLeftEyeLandmark(index) : holisticPipeline.GetRightEyeLandmark(index);
+            var landmark = isLeft ? leftEyeLandmarks[index] : rightEyeLandmarks[index];
 
             // Low pass Filter
             var buffer = isLeft ? lpfedLeftEyeBuffers[index] : lpfedRightEyeBuffers[index];

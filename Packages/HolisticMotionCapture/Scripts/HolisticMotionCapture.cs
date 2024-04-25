@@ -16,10 +16,12 @@ namespace HolisticMotionCapture
         Animator avatar;
         const float maxFps = 30.0f;
         float lastPoseUpdateTime;
-        public Vector4[] PoseWorldLandmark=new Vector4[33];
-        public Vector4[] faceLandmarks, leftEyeLandmarks, rightEyeLandmarks;
-        public Vector4[] leftHandLandmarks=new Vector4[21];
-        public Vector4[]rightHandLandmarks=new Vector4[21];
+        public Vector4[] PoseWorldLandmark=new Vector4[BODY_VERTEX_COUNT];
+        public Vector4[] faceLandmarks=new Vector4[VertexCount];
+        public Vector4[] leftEyeLandmarks = new Vector4[31];
+        public Vector4[] rightEyeLandmarks = new Vector4[31];
+        public Vector4[] leftHandLandmarks=new Vector4[22];
+        public Vector4[] rightHandLandmarks = new Vector4[22];
 
         public HolisticMotionCapturePipeline(Animator avatarAnimator, BlazePoseModel blazePoseModel = BlazePoseModel.full)
         {
@@ -77,7 +79,7 @@ namespace HolisticMotionCapture
             float faceScoreThreshold = 0.5f,
             bool isUpperBodyOnly = false,
             float lerpPercentage = 0.3f,
-            HolisticMocapType mocapType = HolisticMocapType.pose_and_hand)
+            HolisticMocapType mocapType = HolisticMocapType.full)
         {
             float nowTime = Time.time;
             if (nowTime - lastPoseUpdateTime < 1.0f / maxFps)
@@ -90,7 +92,7 @@ namespace HolisticMotionCapture
             PoseRender(mocapType, poseScoreThreshold, isUpperBodyOnly, lerpPercentage);
             HandRender(mocapType, true, handScoreThreshold, lerpPercentage);
             HandRender(mocapType, false, handScoreThreshold, lerpPercentage);
-            // FaceRender(mocapType, faceScoreThreshold, lookTargetWorldPosition);
+            FaceRender(mocapType, faceScoreThreshold, lookTargetWorldPosition);
             //todo
         }
     }
