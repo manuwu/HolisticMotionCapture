@@ -77,10 +77,7 @@ namespace HolisticMotionCapture
             float faceScoreThreshold = 0.5f,
             bool isUpperBodyOnly = false,
             float lerpPercentage = 0.3f,
-            HolisticMocapType mocapType = HolisticMocapType.full,
-            BlazePoseModel blazePoseModel = BlazePoseModel.full,
-            float poseDetectionThreshold = 0.75f,
-            float poseDetectionIouThreshold = 0.3f)
+            HolisticMocapType mocapType = HolisticMocapType.pose_and_hand)
         {
             float nowTime = Time.time;
             if (nowTime - lastPoseUpdateTime < 1.0f / maxFps)

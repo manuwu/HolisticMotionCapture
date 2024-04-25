@@ -151,7 +151,7 @@ public class VideoDataDriverMotion : MonoBehaviour
     [SerializeField, Range(0, 1)] float humanPoseThreshold = 0.5f;
     [SerializeField, Range(0, 1)] float faceScoreThreshold = 0.5f;
     [SerializeField, Range(0, 1)] float handScoreThreshold = 0.5f;
-    HolisticMocapType holisticMocapType = HolisticMocapType.full;
+    HolisticMocapType holisticMocapType = HolisticMocapType.pose_and_hand;
     bool isUpperBodyOnly=false;
     Transform lookTarget;
     Animator avatarAnimator;
@@ -254,34 +254,10 @@ public class VideoDataDriverMotion : MonoBehaviour
         avatarAnimator = avatar;
         motionCapture = new HolisticMotionCapturePipeline(avatar);
     }
-    
-    public void SetHolisticMocapType(HolisticMocapType type)
-    {
-        holisticMocapType = type;
-        ResetPose();
-    }
-    
+
     public void ResetPose()
     {
         if (motionCapture == null) return;
         motionCapture.ResetAvatar(1);
-    }
-    
-    public void SetIsUpperBodyOnly(bool isUpperBodyOnly)
-    {
-        this.isUpperBodyOnly = isUpperBodyOnly;
-        ResetPose();
-    }
-    
-    public void SetMainCameraLook(bool isLookCamera)
-    {
-        if (isLookCamera)
-        {
-            lookTarget = Camera.main.transform;
-        }
-        else
-        {
-            lookTarget = null;
-        }
     }
 }
