@@ -132,18 +132,18 @@ namespace HolisticMotionCapture
             if (mocapType == HolisticMocapType.face_only) return;
 
             // // Reset pose if huamn is not visible.
-            // if (holisticPipeline.GetPoseWorldLandmark(holisticPipeline.poseVertexCount).x < scoreThreshold)
+            // if (PoseWorldLandmark[BODY_VERTEX_COUNT].x < scoreThreshold)
             // {
             //     ResetPose(lerpPercentage);
             //     return;
             // }
 
-            // // Reset pose and update pose in below if mode was changed.
-            // if (this.isUpperBodyOnly != isUpperBodyOnly)
-            // {
-            //     ResetPose(lerpPercentage);
-            //     this.isUpperBodyOnly = isUpperBodyOnly;
-            // }
+            // Reset pose and update pose in below if mode was changed.
+            if (this.isUpperBodyOnly != isUpperBodyOnly)
+            {
+                ResetPose(lerpPercentage);
+                this.isUpperBodyOnly = isUpperBodyOnly;
+            }
 
             // Caluculate positions of hip, neck and spine.
             var rightHipIndex = BoneToHolisticIndex.PoseTable[HumanBodyBones.RightUpperLeg];
@@ -157,7 +157,7 @@ namespace HolisticMotionCapture
             // Caluculate avatar forward direction and hip rotation.
             var forward = TriangleNormal(spinePosition, RotatePoseLandmark(leftHipIndex), RotatePoseLandmark(rightHipIndex));
             var hipScore = (RotatePoseLandmark(leftHipIndex).w + RotatePoseLandmark(rightHipIndex).w) * 0.5f;
-            if (hipScore > scoreThreshold ) //&& !isUpperBodyOnly)
+            if (hipScore > scoreThreshold && !isUpperBodyOnly)
             {
                 var hipRotation = Quaternion.LookRotation(forward, (spinePosition - hipPosition).normalized) * poseJoints[HumanBodyBones.Hips].inverseRotation * poseJoints[HumanBodyBones.Hips].initRotation;
                 var hipTransform = avatar.GetBoneTransform(HumanBodyBones.Hips);
@@ -181,8 +181,10 @@ namespace HolisticMotionCapture
         };
             List<HumanBodyBones> rotatedBones = new List<HumanBodyBones>();
             rotatedBones.AddRange(upperBodyBones);
-            // if (!isUpperBodyOnly) 
-            rotatedBones.AddRange(lowerBodyBones);
+            if (!isUpperBodyOnly)
+            {
+                rotatedBones.AddRange(lowerBodyBones);
+            }
 
             // Rotate head with pose landmark.
             var leftEyeLandmark = RotatePoseLandmark(2);
@@ -198,8 +200,8 @@ namespace HolisticMotionCapture
                 var headRotation = Quaternion.LookRotation(headForward, (eyeMid - mouthMid).normalized) * poseJoints[HumanBodyBones.Head].inverseRotation * poseJoints[HumanBodyBones.Head].initRotation;
                 if (isUpperBodyOnly)
                 {
-                    var spineRotationEulerAngles = headRotation.eulerAngles;
-                    var spineRotation = Quaternion.Euler(headRotation.eulerAngles + new Vector3(-20, 0, 0));
+                    // var spineRotationEulerAngles = headRotation.eulerAngles;
+                    var spineRotation = Quaternion.Euler(headRotation.eulerAngles); //+ new Vector3(-20, 0, 0));
                     var spineTransform = avatar.GetBoneTransform(HumanBodyBones.Spine);
                     spineTransform.rotation = Quaternion.Lerp(spineTransform.rotation, avatar.GetBoneTransform(HumanBodyBones.Hips).rotation * spineRotation, lerpPercentage * 0.5f);
                 }

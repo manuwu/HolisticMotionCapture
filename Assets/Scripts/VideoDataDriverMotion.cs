@@ -152,7 +152,7 @@ public class VideoDataDriverMotion : MonoBehaviour
     [SerializeField, Range(0, 1)] float faceScoreThreshold = 0.5f;
     [SerializeField, Range(0, 1)] float handScoreThreshold = 0.5f;
     HolisticMocapType holisticMocapType = HolisticMocapType.full;
-    bool isUpperBodyOnly=false;
+    bool isUpperBodyOnly=true;
     Transform lookTarget;
     Animator avatarAnimator;
     HolisticMotionCapturePipeline motionCapture;
